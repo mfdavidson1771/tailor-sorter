@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TailorPress — Tier Sorter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1814;
+    --ink-mid: #4a4640;
+    --ink-light: #8a8680;
+    --ink-faint: #c8c4be;
+    --paper: #f7f4ef;
+    --paper-dark: #ede9e2;
+    --otr: #e8e2d8;
+    --otr-accent: #6b6358;
+    --mtm: #dde5df;
+    --mtm-accent: #3a5c42;
+    --bespoke: #e2dded;
+    --bespoke-accent: #4a3a6b;
+    --unassigned: #f0ece5;
+    --border: rgba(26,24,20,0.12);
+    --border-mid: rgba(26,24,20,0.2);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+  }
+
+  .logo span {
+    color: var(--ink-light);
+    font-weight: 400;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    padding: 7px 16px;
+    border-radius: 2px;
+    border: 1px solid var(--border-mid);
+    background: transparent;
+    color: var(--ink-mid);
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.15s;
+  }
+
+  .btn:hover { background: var(--paper-dark); color: var(--ink); }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .btn-primary:hover { background: var(--ink-mid); color: var(--paper); }
+
+  .btn-danger {
+    border-color: #c0392b;
+    color: #c0392b;
+  }
+  .btn-danger:hover { background: #fdf0ef; }
+
+  /* Main layout */
+  .main { padding: 24px 32px 48px; }
+
+  .progress-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    background: var(--paper-dark);
+    border-radius: 2px;
+    font-size: 12px;
+    color: var(--ink-light);
+    letter-spacing: 0.03em;
+  }
+
+  .progress-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .pill-otr { background: var(--otr); color: var(--otr-accent); }
+  .pill-mtm { background: var(--mtm); color: var(--mtm-accent); }
+  .pill-bespoke { background: var(--bespoke); color: var(--bespoke-accent); }
+  .pill-unassigned { background: var(--paper-dark); color: var(--ink-light); border: 1px solid var(--border); }
+
+  /* Board */
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .column {
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .col-otr { background: var(--otr); }
+  .col-mtm { background: var(--mtm); }
+  .col-bespoke { background: var(--bespoke); }
+
+  .col-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .col-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  .col-otr .col-title { color: var(--otr-accent); }
+  .col-mtm .col-title { color: var(--mtm-accent); }
+  .col-bespoke .col-title { color: var(--bespoke-accent); }
+
+  .col-subtitle {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--ink-light);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-left: 8px;
+  }
+
+  .col-count {
+    font-size: 11px;
+    color: var(--ink-light);
+    font-weight: 400;
+  }
+
+  .drop-zone {
+    padding: 10px;
+    min-height: 200px;
+    flex: 1;
+    transition: background 0.1s;
+  }
+
+  .drop-zone.drag-over {
+    background: rgba(255,255,255,0.4);
+    outline: 2px dashed var(--border-mid);
+    outline-offset: -6px;
+    border-radius: 2px;
+  }
+
+  .drop-zone-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    font-style: italic;
+  }
+
+  /* Unassigned pool */
+  .unassigned-wrapper {
+    border: 1px dashed var(--border-mid);
+    border-radius: 3px;
+    background: var(--unassigned);
+    overflow: hidden;
+  }
+
+  .unassigned-header {
+    padding: 12px 16px 8px;
+    border-bottom: 1px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .unassigned-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+  }
+
+  .unassigned-pool {
+    padding: 10px 12px 12px;
+  }
+
+  /* Category groups */
+  .cat-group { margin-bottom: 6px; }
+
+  .cat-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 4px 2px 2px;
+    display: block;
+  }
+
+  .chips-row { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  /* Chips */
+  .chip {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    padding: 4px 9px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: rgba(247,244,239,0.85);
+    color: var(--ink);
+    cursor: grab;
+    display: inline-block;
+    line-height: 1.5;
+    user-select: none;
+    transition: opacity 0.1s, transform 0.1s, box-shadow 0.1s;
+    letter-spacing: 0.01em;
+  }
+
+  .chip:hover {
+    background: #fff;
+    border-color: var(--border-mid);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+  }
+
+  .chip:active { cursor: grabbing; }
+  .chip.dragging { opacity: 0.3; transform: scale(0.96); }
+
+  .chip.in-otr { background: rgba(255,255,255,0.7); border-color: var(--otr-accent); opacity: 0.85; }
+  .chip.in-mtm { background: rgba(255,255,255,0.7); border-color: var(--mtm-accent); opacity: 0.85; }
+  .chip.in-bespoke { background: rgba(255,255,255,0.7); border-color: var(--bespoke-accent); opacity: 0.85; }
+
+  /* Save/load modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,24,20,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--paper);
+    border-radius: 4px;
+    padding: 28px 32px;
+    width: 520px;
+    max-width: 92vw;
+    border: 1px solid var(--border-mid);
+  }
+
+  .modal h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .modal p {
+    font-size: 12px;
+    color: var(--ink-light);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .modal textarea {
+    width: 100%;
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 11px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-mid);
+    border-radius: 2px;
+    background: var(--paper-dark);
+    color: var(--ink);
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.5;
+  }
+
+  .modal textarea:focus { outline: 2px solid var(--ink-mid); outline-offset: 1px; }
+
+  .modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+
+  .copy-feedback {
+    font-size: 11px;
+    color: var(--mtm-accent);
+    align-self: center;
+    margin-right: auto;
+    display: none;
+  }
+
+  /* Notification toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 12px;
+    padding: 8px 20px;
+    border-radius: 2px;
+    letter-spacing: 0.03em;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 300;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">TailorPress <span>/ Tier Sorter</span></div>
+  <div class="header-actions">
+    <button class="btn" onclick="openLoad()">Load state</button>
+    <button class="btn" onclick="openSave()">Save state</button>
+    <button class="btn btn-danger" onclick="confirmReset()">Reset</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="progress-bar">
+    <span>Features assigned:</span>
+    <div class="progress-pills">
+      <span class="pill pill-otr" id="pill-otr">OTR: 0</span>
+      <span class="pill pill-mtm" id="pill-mtm">MTM: 0</span>
+      <span class="pill pill-bespoke" id="pill-bespoke">Bespoke: 0</span>
+      <span class="pill pill-unassigned" id="pill-unassigned">Unassigned: 110</span>
+    </div>
+  </div>
+
+  <div class="board">
+    <div class="column col-otr">
+      <div class="col-header">
+        <div>
+          <span class="col-title">OTR</span>
+          <span class="col-subtitle">Off the rack</span>
+        </div>
+        <span class="col-count" id="count-otr">0 features</span>
+      </div>
+      <div class="drop-zone" id="zone-otr"
+        ondragover="onOver(event)"
+        ondragleave="onLeave(event)"
+        ondrop="onDrop(event,'otr')">
+        <div class="drop-zone-empty" id="empty-otr">Drop features here</div>
+      </div>
+    </div>
+
+    <div class="column col-mtm">
+      <div class="col-header">
+        <div>
+          <span class="col-title">MTM</span>
+          <span class="col-subtitle">Made to measure</span>
+        </div>
+        <span class="col-count" id="count-mtm">0 features</span>
+      </div>
+      <div class="drop-zone" id="zone-mtm"
+        ondragover="onOver(event)"
+        ondragleave="onLeave(event)"
+        ondrop="onDrop(event,'mtm')">
+        <div class="drop-zone-empty" id="empty-mtm">Drop features here</div>
+      </div>
+    </div>
+
+    <div class="column col-bespoke">
+      <div class="col-header">
+        <div>
+          <span class="col-title">Bespoke</span>
+          <span class="col-subtitle">Full bespoke</span>
+        </div>
+        <span class="col-count" id="count-bespoke">0 features</span>
+      </div>
+      <div class="drop-zone" id="zone-bespoke"
+        ondragover="onOver(event)"
+        ondragleave="onLeave(event)"
+        ondrop="onDrop(event,'bespoke')">
+        <div class="drop-zone-empty" id="empty-bespoke">Drop features here</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="unassigned-wrapper">
+    <div class="unassigned-header">
+      <span class="unassigned-title">Unassigned pool</span>
+      <span class="col-count" id="count-unassigned">110 features</span>
+    </div>
+    <div class="unassigned-pool"
+      ondragover="onOver(event)"
+      ondragleave="onLeave(event)"
+      ondrop="onDrop(event,'unassigned')">
+      <div id="pool"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Save modal -->
+<div class="modal-overlay" id="modal-save">
+  <div class="modal">
+    <h3>Save your progress</h3>
+    <p>Copy this code and send it to Austin. He can paste it into "Load state" to pick up exactly where you left off.</p>
+    <textarea id="save-code" readonly></textarea>
+    <div class="modal-actions">
+      <span class="copy-feedback" id="copy-feedback">Copied to clipboard</span>
+      <button class="btn btn-primary" onclick="copyCode()">Copy code</button>
+      <button class="btn" onclick="closeSave()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Load modal -->
+<div class="modal-overlay" id="modal-load">
+  <div class="modal">
+    <h3>Load a saved state</h3>
+    <p>Paste the code you received below. This will replace the current board with the saved arrangement.</p>
+    <textarea id="load-code" placeholder="Paste code here…"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="loadCode()">Load</button>
+      <button class="btn" onclick="closeLoad()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const FEATURES = [
+  {id:"id1",cat:"Identity",label:"Logo display"},{id:"id2",cat:"Identity",label:"Brand colour palette"},{id:"id3",cat:"Identity",label:"Custom typography"},{id:"id4",cat:"Identity",label:"Hero / banner section"},{id:"id5",cat:"Identity",label:"Tagline / strapline"},{id:"id6",cat:"Identity",label:"About the tailor"},{id:"id7",cat:"Identity",label:"Founder story"},{id:"id8",cat:"Identity",label:"Heritage & history timeline"},{id:"id9",cat:"Identity",label:"Studio / atelier location"},{id:"id10",cat:"Identity",label:"Awards & accreditations"},{id:"id11",cat:"Identity",label:"Brand video / reel"},{id:"id12",cat:"Identity",label:"Press & media mentions"},{id:"id13",cat:"Identity",label:"Brand manifesto section"},
+  {id:"sv1",cat:"Services",label:"Services overview"},{id:"sv2",cat:"Services",label:"Bespoke tailoring page"},{id:"sv3",cat:"Services",label:"Made-to-measure page"},{id:"sv4",cat:"Services",label:"Off-the-rack page"},{id:"sv5",cat:"Services",label:"Alterations & repairs"},{id:"sv6",cat:"Services",label:"Shirt making page"},{id:"sv7",cat:"Services",label:"Wedding & occasion wear"},{id:"sv8",cat:"Services",label:"Uniform & corporate wear"},{id:"sv9",cat:"Services",label:"Leather & accessories"},{id:"sv10",cat:"Services",label:"Cloth selection guide"},{id:"sv11",cat:"Services",label:"Lining & detail options"},{id:"sv12",cat:"Services",label:"Process walkthrough"},{id:"sv13",cat:"Services",label:"Number of fittings"},{id:"sv14",cat:"Services",label:"Lead times displayed"},{id:"sv15",cat:"Services",label:"Pricing / starting from"},{id:"sv16",cat:"Services",label:"Price calculator"},{id:"sv17",cat:"Services",label:"FAQ section"},
+  {id:"pf1",cat:"Portfolio",label:"Photo gallery"},{id:"pf2",cat:"Portfolio",label:"Gallery lightbox"},{id:"pf3",cat:"Portfolio",label:"Gallery filtering"},{id:"pf4",cat:"Portfolio",label:"Before & after"},{id:"pf5",cat:"Portfolio",label:"Lookbook / editorial"},{id:"pf6",cat:"Portfolio",label:"Video showcase"},{id:"pf7",cat:"Portfolio",label:"Fabric swatch gallery"},{id:"pf8",cat:"Portfolio",label:"Detail close-up gallery"},{id:"pf9",cat:"Portfolio",label:"Client wardrobe case studies"},{id:"pf10",cat:"Portfolio",label:"Seasonal collection pages"},
+  {id:"bk1",cat:"Booking",label:"Contact form"},{id:"bk2",cat:"Booking",label:"Enquiry by service type"},{id:"bk3",cat:"Booking",label:"Online appointment booking"},{id:"bk4",cat:"Booking",label:"Booking calendar"},{id:"bk5",cat:"Booking",label:"Consultation request form"},{id:"bk6",cat:"Booking",label:"Phone number display"},{id:"bk7",cat:"Booking",label:"WhatsApp / chat widget"},{id:"bk8",cat:"Booking",label:"Email address display"},{id:"bk9",cat:"Booking",label:"Google Maps embed"},{id:"bk10",cat:"Booking",label:"Directions / parking info"},{id:"bk11",cat:"Booking",label:"Opening hours"},{id:"bk12",cat:"Booking",label:"Virtual consultation"},{id:"bk13",cat:"Booking",label:"Home / travel visit option"},{id:"bk14",cat:"Booking",label:"International enquiry form"},
+  {id:"ec1",cat:"E-commerce",label:"OTR shop / listings"},{id:"ec2",cat:"E-commerce",label:"Fabric / cloth shop"},{id:"ec3",cat:"E-commerce",label:"Accessories shop"},{id:"ec4",cat:"E-commerce",label:"Gift vouchers"},{id:"ec5",cat:"E-commerce",label:"Shopping cart"},{id:"ec6",cat:"E-commerce",label:"Checkout & payment"},{id:"ec7",cat:"E-commerce",label:"Size guide"},{id:"ec8",cat:"E-commerce",label:"Product zoom / detail view"},{id:"ec9",cat:"E-commerce",label:"Stock availability"},{id:"ec10",cat:"E-commerce",label:"Wishlist / save for later"},{id:"ec11",cat:"E-commerce",label:"Discount / promo codes"},{id:"ec12",cat:"E-commerce",label:"Shipping information"},{id:"ec13",cat:"E-commerce",label:"Returns policy"},{id:"ec14",cat:"E-commerce",label:"Product customisation"},
+  {id:"ct1",cat:"Content",label:"Blog / journal"},{id:"ct2",cat:"Content",label:"Style guides & articles"},{id:"ct3",cat:"Content",label:"Cloth & fabric education"},{id:"ct4",cat:"Content",label:"Care & maintenance tips"},{id:"ct5",cat:"Content",label:"Seasonal trend pieces"},{id:"ct6",cat:"Content",label:"Behind-the-scenes"},{id:"ct7",cat:"Content",label:"Newsletter signup"},{id:"ct8",cat:"Content",label:"Pop-up / lead magnet"},{id:"ct9",cat:"Content",label:"Resource downloads"},
+  {id:"sp1",cat:"Social proof",label:"Client testimonials"},{id:"sp2",cat:"Social proof",label:"Video testimonials"},{id:"sp3",cat:"Social proof",label:"Star ratings display"},{id:"sp4",cat:"Social proof",label:"Reviews embed"},{id:"sp5",cat:"Social proof",label:"Notable clients section"},{id:"sp6",cat:"Social proof",label:"Instagram feed"},{id:"sp7",cat:"Social proof",label:"Social media links"},{id:"sp8",cat:"Social proof",label:"Share buttons"},{id:"sp9",cat:"Social proof",label:"Press quotes / logos"},
+  {id:"cp1",cat:"Client portal",label:"Client login area"},{id:"cp2",cat:"Client portal",label:"Order tracking"},{id:"cp3",cat:"Client portal",label:"Measurement profile"},{id:"cp4",cat:"Client portal",label:"Order history"},{id:"cp5",cat:"Client portal",label:"Fitting appointment history"},{id:"cp6",cat:"Client portal",label:"Garment care documents"},{id:"cp7",cat:"Client portal",label:"Invoice / receipt download"},{id:"cp8",cat:"Client portal",label:"Reorder / repeat commission"},{id:"cp9",cat:"Client portal",label:"Fabric recommendations"},
+  {id:"tc1",cat:"Technical",label:"Mobile responsive"},{id:"tc2",cat:"Technical",label:"Fast page load"},{id:"tc3",cat:"Technical",label:"SSL / HTTPS"},{id:"tc4",cat:"Technical",label:"SEO meta tags"},{id:"tc5",cat:"Technical",label:"Schema markup"},{id:"tc6",cat:"Technical",label:"Google Analytics"},{id:"tc7",cat:"Technical",label:"Cookie consent"},{id:"tc8",cat:"Technical",label:"Privacy policy page"},{id:"tc9",cat:"Technical",label:"Terms & conditions"},{id:"tc10",cat:"Technical",label:"Sitemap"},{id:"tc11",cat:"Technical",label:"Custom domain"},{id:"tc12",cat:"Technical",label:"CMS / content editing"},{id:"tc13",cat:"Technical",label:"Multi-language support"},{id:"tc14",cat:"Technical",label:"Accessibility (WCAG)"},{id:"tc15",cat:"Technical",label:"404 / error pages"},
+  {id:"ux1",cat:"UX",label:"Sticky navigation"},{id:"ux2",cat:"UX",label:"Smooth scroll"},{id:"ux3",cat:"UX",label:"Scroll animations"},{id:"ux4",cat:"UX",label:"Back to top button"},{id:"ux5",cat:"UX",label:"Loading / transitions"},{id:"ux6",cat:"UX",label:"Breadcrumb navigation"},{id:"ux7",cat:"UX",label:"Search functionality"},{id:"ux8",cat:"UX",label:"Dark mode toggle"},{id:"ux9",cat:"UX",label:"Print-friendly pages"},{id:"ux10",cat:"UX",label:"Progress indicator"}
+];
+
+const state = {};
+FEATURES.forEach(f => state[f.id] = 'unassigned');
+
+let dragId = null;
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function makeChip(f, zone) {
+  const el = document.createElement('span');
+  el.className = 'chip in-' + (zone !== 'unassigned' ? zone : '');
+  if (zone === 'unassigned') el.className = 'chip';
+  el.textContent = f.label;
+  el.dataset.id = f.id;
+  el.draggable = true;
+  el.title = 'Drag to move · ' + f.cat;
+  el.ondragstart = (e) => {
+    dragId = f.id;
+    setTimeout(() => el.classList.add('dragging'), 0);
+  };
+  el.ondragend = () => el.classList.remove('dragging');
+  return el;
+}
+
+function renderZone(zone) {
+  if (zone === 'unassigned') {
+    const pool = document.getElementById('pool');
+    pool.innerHTML = '';
+    const byCat = {};
+    FEATURES.filter(f => state[f.id] === 'unassigned').forEach(f => {
+      if (!byCat[f.cat]) byCat[f.cat] = [];
+      byCat[f.cat].push(f);
+    });
+    Object.entries(byCat).forEach(([cat, items]) => {
+      const g = document.createElement('div');
+      g.className = 'cat-group';
+      const lbl = document.createElement('span');
+      lbl.className = 'cat-label';
+      lbl.textContent = cat;
+      g.appendChild(lbl);
+      const row = document.createElement('div');
+      row.className = 'chips-row';
+      items.forEach(f => row.appendChild(makeChip(f, 'unassigned')));
+      g.appendChild(row);
+      pool.appendChild(g);
+    });
+  } else {
+    const zone_el = document.getElementById('zone-' + zone);
+    const empty = document.getElementById('empty-' + zone);
+    const items = FEATURES.filter(f => state[f.id] === zone);
+    const existingChips = zone_el.querySelectorAll('.cat-group');
+    existingChips.forEach(el => el.remove());
+
+    if (items.length === 0) {
+      empty && (empty.style.display = 'flex');
+    } else {
+      empty && (empty.style.display = 'none');
+      const byCat = {};
+      items.forEach(f => {
+        if (!byCat[f.cat]) byCat[f.cat] = [];
+        byCat[f.cat].push(f);
+      });
+      Object.entries(byCat).forEach(([cat, its]) => {
+        const g = document.createElement('div');
+        g.className = 'cat-group';
+        const lbl = document.createElement('span');
+        lbl.className = 'cat-label';
+        lbl.textContent = cat;
+        g.appendChild(lbl);
+        const row = document.createElement('div');
+        row.className = 'chips-row';
+        its.forEach(f => row.appendChild(makeChip(f, zone)));
+        g.appendChild(row);
+        zone_el.appendChild(g);
+      });
+    }
+  }
+}
+
+function updateCounts() {
+  ['otr','mtm','bespoke','unassigned'].forEach(z => {
+    const n = Object.values(state).filter(v => v === z).length;
+    const countEl = document.getElementById('count-' + z);
+    if (countEl) countEl.textContent = n + ' feature' + (n !== 1 ? 's' : '');
+    const pillEl = document.getElementById('pill-' + z);
+    if (pillEl) {
+      const labels = {otr:'OTR', mtm:'MTM', bespoke:'Bespoke', unassigned:'Unassigned'};
+      pillEl.textContent = labels[z] + ': ' + n;
+    }
+  });
+}
+
+function render() {
+  ['otr','mtm','bespoke','unassigned'].forEach(renderZone);
+  updateCounts();
+}
+
+function onOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+function onLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function onDrop(e, zone) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (dragId) {
+    state[dragId] = zone;
+    dragId = null;
+    render();
+  }
+}
+
+function confirmReset() {
+  if (confirm('Reset the board? All assignments will be cleared.')) {
+    FEATURES.forEach(f => state[f.id] = 'unassigned');
+    render();
+    showToast('Board reset');
+  }
+}
+
+// Save / load
+function openSave() {
+  const code = btoa(JSON.stringify(state));
+  document.getElementById('save-code').value = code;
+  document.getElementById('modal-save').classList.add('open');
+  document.getElementById('copy-feedback').style.display = 'none';
+}
+
+function closeSave() {
+  document.getElementById('modal-save').classList.remove('open');
+}
+
+function copyCode() {
+  const ta = document.getElementById('save-code');
+  ta.select();
+  document.execCommand('copy');
+  document.getElementById('copy-feedback').style.display = 'inline';
+  showToast('Code copied to clipboard');
+}
+
+function openLoad() {
+  document.getElementById('load-code').value = '';
+  document.getElementById('modal-load').classList.add('open');
+}
+
+function closeLoad() {
+  document.getElementById('modal-load').classList.remove('open');
+}
+
+function loadCode() {
+  const raw = document.getElementById('load-code').value.trim();
+  try {
+    const loaded = JSON.parse(atob(raw));
+    let count = 0;
+    Object.entries(loaded).forEach(([id, zone]) => {
+      if (state.hasOwnProperty(id) && ['otr','mtm','bespoke','unassigned'].includes(zone)) {
+        state[id] = zone;
+        count++;
+      }
+    });
+    closeLoad();
+    render();
+    showToast('State loaded — ' + count + ' features restored');
+  } catch(e) {
+    alert('That code looks invalid. Make sure you copied the full text.');
+  }
+}
+
+// Close modals on overlay click
+document.getElementById('modal-save').addEventListener('click', function(e) {
+  if (e.target === this) closeSave();
+});
+document.getElementById('modal-load').addEventListener('click', function(e) {
+  if (e.target === this) closeLoad();
+});
+
+render();
+</script>
+</body>
+</html>
